@@ -1,0 +1,153 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Dec 16 09:25:08 2022
+
+@author: Ching-Chuan Tsong
+"""
+
+"""
+#########################
+定期定額存(ETF)退休金, 計算每月所存金額
+#########################
+"""
+
+#111/12/16, 111/12/17(for mypython39 OK!)
+
+##########################
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from pylab import mpl
+import seaborn as sns
+#from datetime import datetime  # 處理日期套件
+#import pandas_datareader.data as web #抓取yahoo股價的套件
+
+#from sklearn.linear_model import LinearRegression 
+#from sklearn.model_selection import train_test_split
+
+#KMeans: unsupervised learning
+#from sklearn.cluster import KMeans
+
+#import warnings #忽略warnings  111/12/11 for python 3.9
+#=======================================#
+
+sns.set() #seaborn預設的組合風格
+#plt.style.use('seaborn')
+mpl.rcParams['font.family'] = 'serif'
+
+#設定np列印格式. suppress=True:取消科學記數法
+#對浮點數做設定
+np.set_printoptions(suppress=True,
+                    formatter={'float': lambda x: f'{x:6.3f}'}
+                    ) 
+
+# df設定列印格式
+#pd.set_option('display.precision', 2)
+
+#显示小数位数
+pd.set_option('display.float_format', lambda x: f'{x:6.3f}')
+
+#warnings.filterwarnings("ignore") #忽略warnings  111/12/11
+###########################
+
+
+"""
+#########################
+p(1+r)^40+p(1+r)^39+...+p(1+r)=A (期末退休金總額)
+===>
+
+p=A*r/((1+r)^41-(1+r))
+#########################
+"""
+
+A = 1000 #單位萬
+n = 40 #期數(存幾年)
+rs = [0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06] #殖利率
+
+ps = []
+for r in rs:
+    p = (A * r) / ((1 + r)**(n+1) - (1 + r))
+    p = (p * 10000) / 12 #單位換成元, 計算每月存的金額
+    ps.append(p)
+    
+ps
+#============================#
+
+result_df = pd.DataFrame({"yield": rs,
+                          "amount": ps,})
+
+result_df 
+
+print()
+print("=======================================")
+print(f"total amount of money in the end = {A}")
+print(f"periods = {n}")
+print("=======================================")
+print(result_df)
+print("=======================================")
+
+#df畫圖(bar)
+result_df.plot(x="yield", y="amount", kind="bar",
+               figsize=(10, 6), edgecolor="k", lw=1.5, rot=0,
+               title=f"periods= {n}")
+plt.show()
+#===============================================#
+
+"""
+=======================
+進化版
+=======================
+"""
+
+#==========================#
+def p_proc(n, r):
+    p = (A * r) / ((1 + r)**(n+1) - (1 + r))
+    p = (p * 10000) / 12 #單位換成元, 計算每月存的金額
+    return round(p, 0) #四捨五入到整數
+#==========================#
+
+    
+A = 1000 #單位萬
+ns = [20, 25, 30, 35, 40] #期數(存幾年)
+rs = [0.03, 0.035, 0.04, 0.045, 0.05, 0.055, 0.06] #殖利率
+
+result_df2 = pd.DataFrame() #空df
+
+for n in ns:  
+    ps = []
+    for r in rs:
+        p = p_proc(n, r)
+        ps.append(p) 
+        
+    result_df2[f"n={n}"] = ps    
+
+result_df2 
+      
+result_df2.index = rs   #index換成殖利率    
+result_df2
+
+result_df2.index.name = "Yield"
+result_df2
+
+result_df2.to_csv("定期定額存退休金.csv")
+#===============================#
+
+#color map: 參考google: colormap matplotlib
+result_df2.plot(figsize=(10, 6), rot=0, kind="bar",
+                edgecolor="k", lw=1,
+                title="Money investment per month", cmap="coolwarm")
+plt.xlabel("Yield", fontsize=12)
+plt.ylabel("Amount", fontsize=12)
+plt.legend(title='period')
+plt.show()
+#===============================#
+
+#kind=barh
+result_df2.plot(figsize=(10, 6), rot=0, kind="barh",
+                edgecolor="k", lw=1,
+                title="Money investment per month", cmap="bwr")
+plt.xlabel("Amount", fontsize=12)
+plt.ylabel("Yield", fontsize=12)
+plt.legend(title='period')
+plt.show()
+#===============================#
